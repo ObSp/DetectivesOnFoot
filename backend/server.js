@@ -2,7 +2,7 @@ const path = require("path")
 
 const app = require("express")()
 const server = require("http").createServer(app)
-const io = require("socket.io")(server, { cors: { origin: "*" } })
+const io = require("socket.io")(server, { cors: { origin: "*" }})
 const gameManager = require("./gameManager/gameManager")
 
 app.set("view engine", "ejs")
@@ -24,7 +24,7 @@ app.get("/join/:id", (req, res) => {
   res.send("Joining game with id: " + req.params.id)
 })
 
-app.get("/ingame/:id", (req, res) => {
+app.get("/ingame", (req, res) => {
   res.render("inGame")
 })
 
