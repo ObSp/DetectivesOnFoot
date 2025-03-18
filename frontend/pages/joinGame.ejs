@@ -8,11 +8,29 @@
     <link rel="stylesheet" href="/frontend/css/joinGame.css">
 </head>
 <body>
+    <img id="bg" alt="">
     <div id="page-content">
         <h1 id="page-header">Detectives On Foot</h1>
 
         <input type="text" id="game-code" placeholder="Enter Game Code">
-        <button type="button" id="join" class="page-buttons" onclick="window.location.href='/join/'+document.getElementById('game-code').value">Join Game</button>
+        <button type="button" id="join" class="page-buttons">Join Game</button>
     </div>
+
+    <script>
+        const get = (id) => document.getElementById(id)
+        let enterName = false
+        let gameCode = ""
+
+        get("join").addEventListener("click", () => {
+            if (!enterName) {
+                gameCode = get("game-code").value
+                get("game-code").value = ""
+                get("game-code").placeholder = "Enter Name"
+                enterName = true
+            } else {
+                window.location.href='/game?id='+gameCode+'&name='+get("game-code").value
+            }
+        })
+    </script>
 </body>
 </html>

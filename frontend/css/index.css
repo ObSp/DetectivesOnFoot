@@ -2,13 +2,6 @@
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-body {
-    background-image: url("/frontend/assets/pexels-pixabay-290595.jpg");
-    background-repeat: no-repeat;
-    background-size: 300vh;
-    background-position-x: center;
-}
-
 #page-content {
     position: absolute;
     top: 50%;
@@ -22,6 +15,21 @@ body {
 
     -webkit-text-stroke-width: 2px;
     -webkit-text-stroke-color: white
+}
+
+#bg {
+    width: 102vw;
+    height: 102vh;
+    filter: blur(5px);
+
+    background-image: url("/frontend/assets/map.png");
+    background-size: cover;
+
+    position: fixed;
+    top: -1%;
+    left: -1%;
+
+    z-index: -1;
 }
 
 .page-buttons {

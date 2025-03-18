@@ -1,0 +1,97 @@
+* {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+body {
+    margin: 0;
+    overflow: hidden;
+}
+
+img {
+    width: 102vw;
+    height: 102vh;
+    filter: blur(5px);
+
+    background-image: url("/frontend/assets/map.png");
+    background-size: cover;
+
+    position: fixed;
+    top: -1%;
+    left: -1%;
+
+    z-index: -1;
+}
+
+#popup {
+    color: white;
+    text-align: center;
+
+    font-size: 4rem;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#waiting-players {
+    color: white;
+    text-align: center;
+
+    font-size: 2rem;
+
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+#waiting-players ul {
+    text-align: left;
+    list-style: none;
+
+    min-width: 300px;
+    width: 21vw;
+}
+
+#waiting-players ul li {
+    margin: 1rem;
+}
+
+#waiting-players p {
+    color: rgba(255, 255, 255, 0.808);
+    font-size: 1.3rem;
+}
+
+#start-button {
+
+    min-width: 300px;
+    width: 21vw;
+    height: 50px;
+
+    display: block;
+
+    margin: auto;
+
+    background-color: white;
+    border: none;
+    stroke: none;
+
+    border-width: 2px;
+    border-color: rgb(0, 26, 73);
+    border-style: solid;
+    border-radius: 25px;
+
+    font-size: 1em;
+
+    transition: all .5s;
+    
+    margin-top: 50px;
+}
+#start-button:hover {
+    background-color: rgb(0, 26, 73);
+    color: white;
+
+    cursor: pointer;
+}

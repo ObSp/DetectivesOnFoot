@@ -5,13 +5,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detectives on Foot</title>
     <link rel="stylesheet" href="/frontend/css/index.css">
+    <link rel="stylesheet" href="/frontend/css/hostGame.css">
 </head>
 <body>
+    <img id="bg" alt="">
     <div id="page-content">
         <h1 id="page-header">Detectives On Foot</h1>
 
-        <button type="button" id="host" class="page-buttons" onclick="window.location.href='/host'">Host Game</button>
-        <button type="button" id="join" class="page-buttons" onclick="window.location.href='/join'">Join Game</button>
+        <input type="text" id="name" placeholder="Enter Your Name">
+        <button type="button" id="host" class="page-buttons">Host Game</button>
     </div>
+
+    <script>
+        const get = (id) => document.getElementById(id)
+
+        get("host").addEventListener("click", () => {
+            window.location.href='/create?name='+get("name").value
+        })
+    </script>
 </body>
 </html>

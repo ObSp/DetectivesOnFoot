@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game - Detectives On Foot</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="/frontend/css/game.css">
+</head>
+<body>
+
+    <img alt="">
+
+    <div id="waiting-players">
+        <h2>Players: </h2>
+        <ul id="player-list">
+            
+        </ul>
+        <button type="button" id="start-button">Start Game</button>
+        <p id="game-code-display">Game Code: </p>
+    </div>
+
+    <h1 hidden id="popup">Your role: detective.</h1>
+    
+    <script>
+        const socket = io("http://localhost:5000")
+        const get = (id) => document.getElementById(id)
+        const name = new URLSearchParams(new URL(window.location.href).search).get("name")
+
+        socket.on("connect", () => {
+            document.cookie = "last_connected_socket_id=" + socket.id
+        });
+
+        socket.on("game_joined", (gameId) => {
+            get("popup").hidden = true
+            get("waiting-players").hidden = false
+            get("game-code-display").innerText = `Game Code: ${gameId}`
+        })
+
+        socket.on("invalid_game_id", () => {
+            get("popup").innerText = "Invalid game code."
+            get("popup").hidden = false
+            get("waiting-players").hidden = true
+        })
+
+        socket.on("player_update", (players) => {
+            get("player-list").innerHTML = ""
+            let isHost = false
+            for (const player of players) {
+                const li = document.createElement("li")
+                li.innerText = player.name + (player.isHost ? " (Host)" : "")
+                get("player-list").appendChild(li)
+
+                if (player.name == name) {
+                    isHost = player.isHost
+                }
+            }
+
+            if (!isHost) {
+                get("waiting-players").removeChild(get("start-button"))
+            }
+        })
+
+    </script>
+
+</body>
+</html>
