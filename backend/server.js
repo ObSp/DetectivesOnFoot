@@ -81,21 +81,27 @@ io.on('connection', (socket) => {
     return socket.emit("invalid_game_id")
   }
 
-  if (requestedGame.started && requestedGame.playerCache.indexOf(playerName) == -1) {
+  const cachedPlayer = requestedGame.getPlayerFromCacheByName(playerName)
+
+  if (requestedGame.started && !cachedPlayer) {
     return socket.emit("join_declined_game_started")
   }
 
-  const player = new gameManager.Player(playerName, socket)
+  const player = cachedPlayer || new gameManager.Player(playerName, socket, requestedGame)
+  
+  if (cachedPlayer) {
+    player.updateSocket(socket)
+  }
+
   requestedGame.addPlayer(player)
   
   if (requestedGame.host === playerName) {
     socket.on("start_game", () => {
-      console.log("start")
       requestedGame.start()
     })
   }
 
-  socket.emit("game_joined", requestedGame.getSerializedGame())
+  socket.emit("game_joined", requestedGame.getSerializedGame(), player.getSerialized())
 
   requestedGame.emitToAllPlayers("player_update", requestedGame.getSerializedPlayers())
 

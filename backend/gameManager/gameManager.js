@@ -5,21 +5,81 @@ class Game {
         this.host = host;
         this.id = Math.floor(Math.random() * 10000);
         this.playerCache = []
+        this.timeLeft = 10*60;
+        this.locateTimeNumber = 10;
+        this.ogTimeLeft = this.timeLeft
     }
 
     start() {
         this.started = true;
-        this.emitToAllPlayers("game_started", "Detective");
         for (const plr of this.players) {
-            plr.role = "Detective"
-            console.log(plr.name)
+            plr.role = "Criminal"
+            plr.socket.emit("game_started", plr.role)
         }
-        console.log(this.players)
+
+        
+        this.players.forEach(plr => {
+            const func = (long, lat) => {
+                console.log("pos received")
+                console.log(long, lat)
+
+                const obj = {
+                    player: plr.name,
+                    role: plr.role,
+                    long: long,
+                    lat: lat
+                }
+
+                if (plr.role == "Detective") {
+                    this.foreachDetective(plr => {
+                        plr.socket.emit
+                    })
+                }
+                this.emitToAllPlayers("update_player_position", )
+            }
+            plr.socket.on("position_sent", func)
+            plr.onSocketUpdate = () => {
+                console.log("socket update")
+                plr.socket.on("position_sent", func)
+            }
+        })
+
+        
+        setTimeout(()=> {
+            this.gameLoop()
+            
+        }, 10000)
+    }
+
+    gameLoop() {
+        this.timeLeft -= 1
+        if (this.timeLeft <= 0) {
+            this.timeLeft = this.ogTimeLeft
+            
+            this.foreachCriminal(plr => {
+                plr.socket.emit("send_position")
+            })
+        }
+
+        if (this.timeLeft % 10 == 0) {
+            this.foreachDetective(plr => {
+                plr.socket.emit("send_position")
+            })
+        }
+
+        this.emitToAllPlayers("time_update", this.timeLeft)
+
+        setTimeout(()=>{
+            this.gameLoop()
+        }, 1000)
     }
 
     addPlayer(player) {
         this.players.push(player);
-        this.playerCache.push(player.name)
+
+        if (this.playerCache.indexOf(player) == -1) {
+            this.playerCache.push(player)
+        }
     }
 
     removePlayer(player) {
@@ -28,12 +88,7 @@ class Game {
 
     getSerializedPlayers() {
         return this.players.map(player => {
-            return {
-                name: player.name,
-                socketId: player.socketId,
-                isHost: player.name === this.host,
-                role: player.role
-            }
+            return player.getSerialized()
         });
     }
 
@@ -49,6 +104,22 @@ class Game {
         this.players.forEach(player => player.socket.emit(event, ...data));
     }
 
+    foreachCriminal(cb) {
+        for (const plr of this.players) {
+            if (plr.role == "Criminal") {
+                cb(plr)
+            }
+        }
+    }
+
+    foreachDetective(cb) {
+        for (const plr of this.players) {
+            if (plr.role == "Detective") {
+                cb(plr)
+            }
+        }
+    } 
+
     getSerializedGame() {
         return {
             started: this.started,
@@ -56,19 +127,38 @@ class Game {
             id: this.id,
         }
     }
+
+    getPlayerFromCacheByName(name) {
+        return this.playerCache.find(player => player.name == name);
+    }
 }
 
 class Player {
-    constructor(name, socket, role) {
+    constructor(name, socket, game) {
         this.name = name;
         this.socket = socket;
         this.socketId = socket.id;
-        this.role = role;
+        this.role = null;
+        this.game = game;
+        this.onSocketUpdate = null;
     }
 
-    updateSocketId(socketId) {
-        this.socketId = socketId;
-    }   
+    updateSocket(socket) {
+        this.socket = socket;
+        this.socketId = socket.id;
+        if (this.onSocketUpdate) {
+            this.onSocketUpdate()
+        }
+    }
+
+    getSerialized() {
+        return {
+            name: this.name,
+            socketId: this.socketId,
+            isHost: this.name == this.game.host,
+            role: this.role
+        }
+    }
 }
 
 let games = []

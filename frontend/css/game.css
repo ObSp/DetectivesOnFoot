@@ -1,5 +1,6 @@
 * {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    user-select: none;
 }
 
 
@@ -8,7 +9,7 @@ body {
     overflow: hidden;
 }
 
-img {
+#background {
     width: 102vw;
     height: 102vh;
     filter: blur(5px);
@@ -21,6 +22,8 @@ img {
     left: -1%;
 
     z-index: -1;
+
+    pointer-events: none;
 }
 
 #popup {
@@ -94,4 +97,48 @@ img {
     color: white;
 
     cursor: pointer;
+}
+
+#game-ui {
+    width: 100vw;
+    height: 100vh;
+    text-align: center;
+}
+
+#timer-bg {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 70px;
+    width: 600px;
+    pointer-events: none;
+}
+
+#timer-text {
+    position: absolute;
+    left: 50%;
+    top: -55px;
+    transform: translateX(-50%);
+
+
+    color: white;
+
+    font-size: 3rem;
+    font-weight: bold;
+}
+
+.pin {
+    position: absolute;
+    top: 500px;
+    text-align: center;
+    color: white;
+}
+
+.pin img {
+    width: 50px;
+    filter: invert();
+}
+
+.pin p {
+    margin-top: -5px;
 }

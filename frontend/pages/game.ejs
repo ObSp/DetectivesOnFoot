@@ -9,7 +9,7 @@
 </head>
 <body>
 
-    <img alt="">
+    <img id="background" alt="">
 
     <div id="waiting-players">
         <h2>Players: </h2>
@@ -22,25 +22,97 @@
 
     <h1 hidden id="popup">Your role: detective.</h1>
     
+    <div hidden id="game-ui">
+        <img src="/frontend/assets/TimerBgPolice.png" alt="" id="timer-bg">
+        <p id="timer-text">10:00</p>
+
+        <div id="pins">
+            <div class="pin" data-plr="x">
+                <img src="/frontend/assets/pin.png" alt="">
+                <p>Player(10 mins ago)</p>
+            </div>
+        </div>
+    </div>
+    
     <script>
+        function fancyTimeFormat(duration) { //didnt write this
+            // Hours, minutes and seconds
+            const hrs = ~~(duration / 3600);
+            const mins = ~~((duration % 3600) / 60);
+            const secs = ~~duration % 60;
+
+            // Output like "1:01" or "4:03:59" or "123:03:59"
+            let ret = "";
+
+            if (hrs > 0) {
+                ret += "" + hrs + ":" + (mins < 10 ? "0" : "");
+            }
+
+            ret += "" + mins + ":" + (secs < 10 ? "0" : "");
+            ret += "" + secs;
+
+            return ret;
+        }
+
+
         const socket = io("http://localhost:5000")
         const get = (id) => document.getElementById(id)
         const name = new URLSearchParams(new URL(window.location.href).search).get("name")
+        let game;
+        let player;
+
+        Notification.requestPermission()
+
+        function setupGameConnections() {
+            socket.on("send_position", () => {
+                navigator.geolocation.getCurrentPosition(function(pos) {
+
+                    socket.emit("position_sent", pos.coords.latitude, pos.coords.longitude)
+                    if (player.role == "Criminal") {
+                        new Notification("Detectives On Foot: Location Update", {
+                            body: "Your location has been sent to the detectives!"
+                        })
+                    }
+                    console.log("Position sent.")
+
+                }, null, {timeout:10000, enableHighAccuracy: false})
+            })
+
+            socket.on("time_update", (timeLeft) => {
+                get("timer-text").innerText = fancyTimeFormat(timeLeft)
+            })
+
+            socket.on("update_player_location", (info) => {
+                
+            })
+        }
+
+        function setupGameGui() {
+
+            if (player.role == "Criminal") {
+                get("timer-bg").src = "/frontend/assets/TimerBgCrim.png"
+            }
+
+            setupGameConnections()
+        }
 
         socket.on("connect", () => {
             document.cookie = "last_connected_socket_id=" + socket.id
         });
 
-        socket.on("game_joined", (game) => {
+        socket.on("game_joined", (gameObj, playerObj) => {
+            game = gameObj;
+            player = playerObj
+            
             if (!game.started) {
                 get("waiting-players").hidden = false
                 get("game-code-display").innerText = `Game Code: ${game.id}`
                 get("popup").hidden = true
             } else {
-                console.log(game.players)
                 get("waiting-players").hidden = true
-                get("popup").innerHTML = "Your role: "+ game.players.find(player => player.name == name).role;
-                get("popup").hidden = false
+                get("game-ui").hidden = false
+
+                setupGameGui()
             }
         })
 
@@ -75,10 +147,13 @@
         })
 
         socket.on("game_started", (role) => {
-            console.log("start")
             get("waiting-players").hidden = true
             get("popup").innerText = "Your role: "+role
             get("popup").hidden = false
+            setTimeout(function() {
+                get("popup").hidden = true
+                window.location.reload()
+            }, 6*1000)
         })
 
         get("start-button").addEventListener("click", () => {
