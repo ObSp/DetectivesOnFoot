@@ -31,14 +31,27 @@
             document.cookie = "last_connected_socket_id=" + socket.id
         });
 
-        socket.on("game_joined", (gameId) => {
-            get("popup").hidden = true
-            get("waiting-players").hidden = false
-            get("game-code-display").innerText = `Game Code: ${gameId}`
+        socket.on("game_joined", (game) => {
+            if (!game.started) {
+                get("waiting-players").hidden = false
+                get("game-code-display").innerText = `Game Code: ${game.id}`
+                get("popup").hidden = true
+            } else {
+                console.log(game.players)
+                get("waiting-players").hidden = true
+                get("popup").innerHTML = "Your role: "+ game.players.find(player => player.name == name).role;
+                get("popup").hidden = false
+            }
         })
 
         socket.on("invalid_game_id", () => {
             get("popup").innerText = "Invalid game code."
+            get("popup").hidden = false
+            get("waiting-players").hidden = true
+        })
+
+        socket.on("join_declined_game_started", () => {
+            get("popup").innerText = "Unable to join a game that has already started."
             get("popup").hidden = false
             get("waiting-players").hidden = true
         })
@@ -64,6 +77,8 @@
         socket.on("game_started", (role) => {
             console.log("start")
             get("waiting-players").hidden = true
+            get("popup").innerText = "Your role: "+role
+            get("popup").hidden = false
         })
 
         get("start-button").addEventListener("click", () => {

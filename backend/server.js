@@ -5,7 +5,7 @@ const url = require("url")
 const app = require("express")()
 const server = require("http").createServer(app)
 const io = require("socket.io")(server,  {cors: {
-  origin: "https://example.com",
+  origin: "*",
   methods: ["GET", "POST"]
 }})
 const gameManager = require("./gameManager/gameManager")
@@ -81,6 +81,10 @@ io.on('connection', (socket) => {
     return socket.emit("invalid_game_id")
   }
 
+  if (requestedGame.started && requestedGame.playerCache.indexOf(playerName) == -1) {
+    return socket.emit("join_declined_game_started")
+  }
+
   const player = new gameManager.Player(playerName, socket)
   requestedGame.addPlayer(player)
   
@@ -91,7 +95,7 @@ io.on('connection', (socket) => {
     })
   }
 
-  socket.emit("game_joined", requestedGame.id)
+  socket.emit("game_joined", requestedGame.getSerializedGame())
 
   requestedGame.emitToAllPlayers("player_update", requestedGame.getSerializedPlayers())
 

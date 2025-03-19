@@ -4,15 +4,22 @@ class Game {
         this.started = false;
         this.host = host;
         this.id = Math.floor(Math.random() * 10000);
+        this.playerCache = []
     }
 
     start() {
         this.started = true;
         this.emitToAllPlayers("game_started", "Detective");
+        for (const plr of this.players) {
+            plr.role = "Detective"
+            console.log(plr.name)
+        }
+        console.log(this.players)
     }
 
     addPlayer(player) {
         this.players.push(player);
+        this.playerCache.push(player.name)
     }
 
     removePlayer(player) {
@@ -24,7 +31,8 @@ class Game {
             return {
                 name: player.name,
                 socketId: player.socketId,
-                isHost: player.name === this.host
+                isHost: player.name === this.host,
+                role: player.role
             }
         });
     }
@@ -40,13 +48,22 @@ class Game {
     emitToAllPlayers(event, ...data) {
         this.players.forEach(player => player.socket.emit(event, ...data));
     }
+
+    getSerializedGame() {
+        return {
+            started: this.started,
+            players: this.getSerializedPlayers(),
+            id: this.id,
+        }
+    }
 }
 
 class Player {
-    constructor(name, socket) {
+    constructor(name, socket, role) {
         this.name = name;
         this.socket = socket;
         this.socketId = socket.id;
+        this.role = role;
     }
 
     updateSocketId(socketId) {
