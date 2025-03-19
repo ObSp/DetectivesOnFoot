@@ -85,7 +85,10 @@ io.on('connection', (socket) => {
   requestedGame.addPlayer(player)
   
   if (requestedGame.host === playerName) {
-    //requestedGame.host = player
+    socket.on("start_game", () => {
+      console.log("start")
+      requestedGame.start()
+    })
   }
 
   socket.emit("game_joined", requestedGame.id)

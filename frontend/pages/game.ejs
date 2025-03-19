@@ -61,6 +61,16 @@
             }
         })
 
+        socket.on("game_started", (role) => {
+            console.log("start")
+            get("waiting-players").hidden = true
+        })
+
+        get("start-button").addEventListener("click", () => {
+            get("waiting-players").removeChild(get("start-button"))
+            socket.emit("start_game")
+        })
+
     </script>
 
 </body>

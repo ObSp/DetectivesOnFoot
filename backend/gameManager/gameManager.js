@@ -8,6 +8,7 @@ class Game {
 
     start() {
         this.started = true;
+        this.emitToAllPlayers("game_started", "Detective");
     }
 
     addPlayer(player) {
