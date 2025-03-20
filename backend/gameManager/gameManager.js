@@ -39,7 +39,6 @@ class Game {
             }
             plr.socket.on("position_sent", func)
             plr.onSocketUpdate = () => {
-                console.log("socket update")
                 plr.socket.on("position_sent", func)
             }
         })
