@@ -6,9 +6,12 @@
     <title>Game - Detectives On Foot</title>
     <script src="/socket.io/socket.io.js"></script>
     <link rel="stylesheet" href="/frontend/css/game.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 </head>
 <body>
-
     <img id="background" alt="">
 
     <div id="waiting-players">
@@ -22,16 +25,11 @@
 
     <h1 hidden id="popup">Your role: detective.</h1>
     
+    <div id="map" hidden></div>
+    
     <div hidden id="game-ui">
         <img src="/frontend/assets/TimerBgPolice.png" alt="" id="timer-bg">
         <p id="timer-text">10:00</p>
-
-        <div id="pins">
-            <div class="pin" data-plr="x">
-                <img src="/frontend/assets/pin.png" alt="">
-                <p>Player(10 mins ago)</p>
-            </div>
-        </div>
     </div>
     
     <script>
@@ -54,28 +52,91 @@
             return ret;
         }
 
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
 
         const socket = io("http://localhost:5000")
         const get = (id) => document.getElementById(id)
         const name = new URLSearchParams(new URL(window.location.href).search).get("name")
+
         let game;
         let player;
+        let curLat;
+        let curLong;
+        let curAccuracy;
+        let map;
+        let lastLocalMarkers = []
+        let firstTime = true
+        let otherPlayerMarkers = {}
 
         Notification.requestPermission()
 
-        function setupGameConnections() {
-            socket.on("send_position", () => {
-                navigator.geolocation.getCurrentPosition(function(pos) {
+        function updateMarkers() {
+            for (const m of lastLocalMarkers) {
+                map.removeLayer(m)
+            }
+            lastLocalMarkers = []
 
-                    socket.emit("position_sent", pos.coords.latitude, pos.coords.longitude)
+            const marker = L.marker([curLat, curLong]).addTo(map)
+            const circle = L.circle([curLat, curLong], {radius: curAccuracy}).addTo(map)
+            lastLocalMarkers.push(marker)
+            lastLocalMarkers.push(circle)
+
+            marker.bindTooltip("Your Position", {direction: "bottom", offset: [-14.5, 30], permanent: true}).openTooltip();
+
+            if (firstTime) {
+                map.fitBounds(circle.getBounds())
+                firstTime = false
+            }
+        }
+
+        function watchPositionSuccess(pos) {
+            curLat = pos.coords.latitude
+            curLong = pos.coords.longitude
+            curAccuracy = pos.coords.accuracy
+
+            if (map) {
+                updateMarkers()
+            }
+        }
+
+        function watchPositionError(err) {
+            if (err.code == 1) {
+                alert("You must allow geolocation access to play this game.")
+            }
+        }
+
+        async function setupGameConnections() {
+            navigator.geolocation.watchPosition(watchPositionSuccess, watchPositionError, {
+                enableHighAccuracy: false,
+                timeout: 5000,
+                maximumAge: Infinity
+            })
+
+            get("map").hidden = false
+
+            while(!curLong || !curLat) {
+                await sleep(100)
+            }
+            
+            //initialize map
+            map = L.map('map').setView([0, 0], 17);
+            L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 25,
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            updateMarkers()
+
+            socket.on("send_position", () => {
+                socket.emit("position_sent", curLat, curLong, curAccuracy)
                     if (player.role == "Criminal") {
                         new Notification("Detectives On Foot: Location Update", {
                             body: "Your location has been sent to the detectives!"
                         })
                     }
                     console.log("Position sent.")
-
-                }, null, {timeout:10000, enableHighAccuracy: false})
             })
 
             socket.on("time_update", (timeLeft) => {
